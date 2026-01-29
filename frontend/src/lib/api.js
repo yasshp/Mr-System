@@ -7,6 +7,8 @@ const api = axios.create({
   },
 });
 
+console.log('API Base URL:', api.defaults.baseURL); // Debug log to see where requests are going
+
 // Add token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
