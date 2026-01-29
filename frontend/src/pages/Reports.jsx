@@ -74,9 +74,21 @@ export default function Reports() {
   const exportToCSV = () => {
     if (data.length === 0) return;
 
+    // Remove unwanted keys like 'actions' or 'sr_no' for export
+    const headers = Object.keys(data[0]).filter(key =>
+      !['actions', 'sr_no'].includes(key.toLowerCase())
+    );
+
     const csvContent = [
-      Object.keys(data[0]).join(','),
-      ...data.map(row => Object.values(row).join(','))
+      headers.join(','),
+      ...data.map(row =>
+        headers.map(fieldName => {
+          const value = row[fieldName] === null || row[fieldName] === undefined ? '' : row[fieldName];
+          // Escape quotes and wrap in quotes if contains comma
+          const stringValue = String(value).replace(/"/g, '""');
+          return `"${stringValue}"`;
+        }).join(',')
+      )
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -90,7 +102,9 @@ export default function Reports() {
   };
 
   const columns = data.length > 0
-    ? Object.keys(data[0]).filter(key => key.toLowerCase() !== 'actions')
+    ? Object.keys(data[0]).filter(key =>
+      !['actions', 'sr_no'].includes(key.toLowerCase())
+    )
     : [];
 
   return (

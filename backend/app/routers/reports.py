@@ -116,7 +116,7 @@ def get_compliance_report(month: int, year: int, mr_id: Optional[str] = None):
         
         visits = df.groupby('customer_name')['date'].nunique().reset_index(name='visit_count')
         
-        visits['sr_no'] = range(1, len(visits) + 1)
+        # visits['sr_no'] = range(1, len(visits) + 1) # Removed
         visits['monthly_range'] = f"{calendar.month_name[month]} {year}"
         # If logical 'compliance' needs target data, that's missing. 
         # For now we return what the frontend expects: visits count.
@@ -158,7 +158,7 @@ def get_customer_behaviour_report(month: int, year: int, mr_id: Optional[str] = 
         pivot['total_activities'] = pivot.sum(axis=1)
         
         pivot.reset_index(inplace=True)
-        pivot['sr_no'] = range(1, len(pivot) + 1)
+        # pivot['sr_no'] = range(1, len(pivot) + 1) # Removed
         
         return pivot.to_dict(orient="records")
         
@@ -183,9 +183,9 @@ def get_travel_report(month: int, year: int, mr_id: Optional[str] = None):
         
         grouped['date'] = pd.to_datetime(grouped['date']).dt.strftime('%Y-%m-%d')
         grouped['travel_distance_km'] = grouped['distance_km'].round(2)
-        grouped['sr_no'] = range(1, len(grouped) + 1)
+        # grouped['sr_no'] = range(1, len(grouped) + 1) # Removed as per user request
         
-        return grouped[['sr_no', 'date', 'travel_distance_km']].to_dict(orient="records")
+        return grouped[['date', 'travel_distance_km']].to_dict(orient="records")
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
