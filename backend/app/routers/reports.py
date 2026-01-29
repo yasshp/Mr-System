@@ -1,257 +1,177 @@
+
 # app/routers/reports.py
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict, Any, Optional
 import pandas as pd
 from datetime import datetime, timedelta
-
-from app.services.supabase_db import load_data
+import calendar
+from app.services.supabase_db import supabase
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
-# In app/routers/reports.py
-# @router.get("/activity")
-# def get_activity_report(start_date: str, end_date: str, mr_id: Optional[str] = None):
-#     print(f"[ACTIVITY REPORT] START - start={start_date}, end={end_date}, mr_id={mr_id or 'all'}")
+def get_db_data(table="master_schedule", mr_id=None, start_date=None, end_date=None, year=None, month=None):
+    """
+    Helper to fetch data efficiently from DB.
+    """
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database connection failed")
 
-#     try:
-#         df = load_data("Master_Schedule")
-#         print(f"[ACTIVITY] Loaded rows: {len(df)}, columns: {list(df.columns)}")
+    query = supabase.table(table).select("*")
+    
+    # 1. MR Filter
+    if mr_id and mr_id.lower() != 'admin':
+        query = query.eq("mr_id", mr_id)
 
-#         if df.empty:
-#             return {"data": [], "total_activities": 0}
+    # 2. Date Range
+    if start_date and end_date:
+        query = query.gte("date", start_date).lte("date", end_date)
+    
+    # 3. Month/Year Logic
+    if year and month:
+        # Calculate start and end of month
+        s_date = f"{year}-{month:02d}-01"
+        _, last_day = calendar.monthrange(year, month)
+        e_date = f"{year}-{month:02d}-{last_day}"
+        query = query.gte("date", s_date).lte("date", e_date)
 
-#         # Safe date conversion with dayfirst=True (handles DD-MM-YYYY)
-#         df['date'] = pd.to_datetime(df['date'], errors='coerce', dayfirst=True)
-#         df = df.dropna(subset=['date'])
+    response = query.execute()
+    data = response.data
+    
+    if not data:
+        return pd.DataFrame() # Empty DF
+        
+    return pd.DataFrame(data)
 
-#         if mr_id:
-#             if 'mr_id' in df.columns:
-#                 df['mr_id'] = df['mr_id'].astype(str).str.strip()
-#                 df = df[df['mr_id'] == mr_id.strip()]
-#             print(f"[ACTIVITY] After MR filter rows: {len(df)}")
 
-#         start = pd.to_datetime(start_date, dayfirst=True)
-#         end = pd.to_datetime(end_date, dayfirst=True)
-
-#         filtered = df[(df['date'] >= start) & (df['date'] <= end)]
-#         print(f"[ACTIVITY] Filtered rows after date range: {len(filtered)}")
-
-#         if filtered.empty:
-#             return {"data": [], "total_activities": 0}
-
-#         grouped = filtered.groupby(filtered['date'].dt.date).size().reset_index(name='activity_count')
-#         grouped['date'] = grouped['date'].dt.strftime('%Y-%m-%d')
-#         grouped = grouped.sort_values('date')
-
-#         total = grouped['activity_count'].sum()
-
-#         return {
-#             "data": grouped[['date', 'activity_count']].to_dict(orient="records"),
-#             "total_activities": int(total)
-#         }
-
-#     except Exception as e:
-#         print(f"[ACTIVITY CRASH] {type(e).__name__}: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 @router.get("/activity")
 def get_activity_report(start_date: str, end_date: str, mr_id: Optional[str] = None):
     print(f"[ACTIVITY REPORT] START - start={start_date}, end={end_date}, mr_id={mr_id or 'all'}")
 
     try:
-        df = load_data("Master_Schedule")
-        print(f"[ACTIVITY] Loaded {len(df)} rows, columns: {list(df.columns)}")
-
-        if df.empty:
-            print("[ACTIVITY] Sheet is empty")
-            return {"data": [], "total_activities": 0, "completed_activities": 0}
-
-        # Ensure required columns exist
-        if 'date' not in df.columns:
-            raise HTTPException(status_code=500, detail="Missing 'date' column in Master_Schedule")
-
-        # Clean date column as string first
-        df['date'] = df['date'].astype(str).str.strip()
-
-        # Convert to datetime with multiple fallback formats
-        df['date'] = pd.to_datetime(
-            df['date'],
-            errors='coerce',
-            format='%Y-%m-%d',
-            exact=False
-        )
-
-        # Fallback for DD-MM-YYYY or other formats
-        if df['date'].isna().sum() > len(df) * 0.5:
-            df['date'] = pd.to_datetime(df['date'], errors='coerce', dayfirst=True)
-
-        # Drop rows with invalid dates
-        df = df.dropna(subset=['date'])
-
-        # MR filter
-        if mr_id:
-            if 'mr_id' in df.columns:
-                df = df[df['mr_id'].astype(str).str.strip() == mr_id.strip()]
-            else:
-                print("[ACTIVITY] No 'mr_id' column - ignoring MR filter")
-
-        # Date range filter
-        start = pd.to_datetime(start_date, dayfirst=True)
-        end = pd.to_datetime(end_date, dayfirst=True)
-
-        filtered = df[(df['date'] >= start) & (df['date'] <= end)]
-        print(f"[ACTIVITY] After date filter: {len(filtered)} rows")
-
-        # Deduplicate to prevent double counting (same as Dashboard logic)
-        if 'activity_id' in filtered.columns:
-            filtered = filtered.drop_duplicates(subset=['activity_id'])
-            print(f"[ACTIVITY] After deduplication: {len(filtered)} rows")
-
-        if filtered.empty:
-            return {"data": [], "total_activities": 0, "completed_activities": 0}
-
-        # Completed activities count (Overall for the period)
-        completed = filtered[filtered['status'].astype(str).str.strip().isin(['Done', 'Completed', 'done', 'completed'])]
-        completed_count = len(completed)
-
-        # Group by date - SAFE way (no .dt crash)
-        # We aggregate to get both total count and completed count per day
-        # Helper to count completed
-        def count_completed(series):
-            return series.astype(str).str.strip().str.lower().isin(['done', 'completed']).sum()
-
-        grouped = (
-            filtered.groupby(filtered['date'].dt.floor('D'))
-            .agg({
-                'activity_id': 'size', # Total activities
-                'status': count_completed # Completed activities
-            })
-            .reset_index()
-        )
-        grouped.rename(columns={'activity_id': 'activity_count', 'status': 'completed_activity_count'}, inplace=True)
+        # Efficient DB Fetch
+        df = get_db_data(mr_id=mr_id, start_date=start_date, end_date=end_date)
         
-        grouped['date'] = grouped['date'].dt.strftime('%Y-%m-%d')
-        grouped = grouped.sort_values('date')
+        if df.empty:
+            return {"data": [], "total_activities": 0, "completed_activities": 0}
 
-        total = grouped['activity_count'].sum()
+        # Deduplicate
+        if 'activity_id' in df.columns:
+            df = df.drop_duplicates(subset=['activity_id'])
+            
+        total_activities = len(df)
+        
+        # Count Completed
+        if 'status' in df.columns:
+             completed_mask = df['status'].astype(str).str.strip().str.lower().isin(['done', 'completed'])
+             completed_activities = completed_mask.sum()
+        else:
+             completed_activities = 0
 
-        print(f"[ACTIVITY] SUCCESS - Total: {total}, Completed: {completed_count}")
-
+        # Group by Date
+        # Ensure date is datetime
+        df['date'] = pd.to_datetime(df['date'])
+        
+        # Aggregate
+        daily = df.groupby(df['date'].dt.strftime('%Y-%m-%d')).agg(
+            activity_count=('activity_id', 'count'),
+            completed_activity_count=('status', lambda x: x.astype(str).str.strip().str.lower().isin(['done', 'completed']).sum())
+        ).reset_index()
+        
         return {
-            "data": grouped[['date', 'activity_count', 'completed_activity_count']].to_dict(orient="records"),
-            "total_activities": int(total),
-            "completed_activities": completed_count
+            "data": daily.rename(columns={'date': 'date'}).to_dict(orient="records"),
+            "total_activities": int(total_activities),
+            "completed_activities": int(completed_activities)
         }
 
     except Exception as e:
-        print(f"[ACTIVITY CRASH] {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))    
+        print(f"[ACTIVITY ERROR] {str(e)}")
+        # import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/compliance", response_model=List[Dict[str, Any]])
 def get_compliance_report(month: int, year: int, mr_id: Optional[str] = None):
-    """
-    Compliance report for a month/year.
-    Params: month (1-12), year (e.g. 2026), mr_id (optional)
-    """
     try:
-        df = load_data("Master_Schedule")
+        df = get_db_data(mr_id=mr_id, year=year, month=month)
         if df.empty:
             return []
 
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        start = datetime(year, month, 1)
-        end = (start + timedelta(days=31)).replace(day=1) - timedelta(days=1)
+        # Group by Customer Name to see how many days they were visited
+        # Compliance logic: usually "Visited / Target Visit Frequency"
+        # Current logic seems to be just listing customers visited in that month.
+        
+        visits = df.groupby('customer_name')['date'].nunique().reset_index(name='visit_count')
+        
+        visits['sr_no'] = range(1, len(visits) + 1)
+        visits['monthly_range'] = f"{calendar.month_name[month]} {year}"
+        # If logical 'compliance' needs target data, that's missing. 
+        # For now we return what the frontend expects: visits count.
+        visits['compliance_dates'] = visits['visit_count'] 
 
-        filtered = df[(df['date'] >= start) & (df['date'] <= end)]
-
-        if mr_id:
-            filtered = filtered[filtered['mr_id'] == mr_id]
-
-        # Group by customer
-        grouped = filtered.groupby('customer_name').agg({
-            'date': 'nunique'  # No. of Dates
-        }).reset_index()
-
-        grouped['monthly_range'] = f"{start.strftime('%d-%m-%Y')} - {end.strftime('%d-%m-%Y')}"
-        grouped['compliance_dates'] = grouped['date']  # Adjust logic if needed
-        grouped['sr_no'] = range(1, len(grouped) + 1)
-
-        return grouped.to_dict(orient="records")
+        return visits.to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/customer-behaviour", response_model=List[Dict[str, Any]])
 def get_customer_behaviour_report(month: int, year: int, mr_id: Optional[str] = None):
-    """
-    Customer behaviour report for a month/year.
-    Params: month (1-12), year (e.g. 2026), mr_id (optional)
-    """
     try:
-        df = load_data("Master_Schedule")
+        df = get_db_data(mr_id=mr_id, year=year, month=month)
         if df.empty:
             return []
 
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        start = datetime(year, month, 1)
-        end = (start + timedelta(days=31)).replace(day=1) - timedelta(days=1)
-
-        filtered = df[(df['date'] >= start) & (df['date'] <= end)]
-
-        if mr_id:
-            filtered = filtered[filtered['mr_id'] == mr_id]
-
-        # Pivot by day of week
-        filtered['day_of_week'] = filtered['date'].dt.day_name()
+        df['date'] = pd.to_datetime(df['date'])
+        df['day_of_week'] = df['date'].dt.day_name()
+        
+        # Pivot: Rows=Customer, Cols=DayOfWeek, Value=Count
         pivot = pd.pivot_table(
-            filtered,
+            df,
             index='customer_name',
             columns='day_of_week',
-            values='activity_id',
+            values='activity_id', # or just count rows
             aggfunc='count',
             fill_value=0
         )
-
+        
+        # Ensure all days exist
         days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-        pivot = pivot.reindex(columns=days, fill_value=0)
+        for day in days:
+            if day not in pivot.columns:
+                pivot[day] = 0
+                
+        # Reorder
+        pivot = pivot[days]
         pivot['total_activities'] = pivot.sum(axis=1)
-
+        
         pivot.reset_index(inplace=True)
         pivot['sr_no'] = range(1, len(pivot) + 1)
-
+        
         return pivot.to_dict(orient="records")
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/travel", response_model=List[Dict[str, Any]])
 def get_travel_report(month: int, year: int, mr_id: Optional[str] = None):
-    """
-    Travel km report for a month/year.
-    Params: month (1-12), year (e.g. 2026), mr_id (optional)
-    """
     try:
-        df = load_data("Master_Schedule")
+        df = get_db_data(mr_id=mr_id, year=year, month=month)
         if df.empty:
             return []
-
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        start = datetime(year, month, 1)
-        end = (start + timedelta(days=31)).replace(day=1) - timedelta(days=1)
-
-        filtered = df[(df['date'] >= start) & (df['date'] <= end)]
-
-        if mr_id:
-            filtered = filtered[filtered['mr_id'] == mr_id]
-
-        # Group by date
-        grouped = filtered.groupby('date').agg({
-            'distance_km': 'sum'  # Total distance per day
-        }).reset_index()
-
-        grouped['sr_no'] = range(1, len(grouped) + 1)
-        grouped['date'] = grouped['date'].dt.strftime('%Y-%m-%d')
+            
+        # Ensure distance is numeric
+        if 'distance_km' not in df.columns:
+             df['distance_km'] = 0
+        df['distance_km'] = pd.to_numeric(df['distance_km'], errors='coerce').fillna(0)
+        
+        # Group by Date
+        grouped = df.groupby('date')['distance_km'].sum().reset_index()
+        
+        grouped['date'] = pd.to_datetime(grouped['date']).dt.strftime('%Y-%m-%d')
         grouped['travel_distance_km'] = grouped['distance_km'].round(2)
-        grouped['actions'] = 'View'  # Placeholder for frontend button
-
-        return grouped.to_dict(orient="records")
+        grouped['sr_no'] = range(1, len(grouped) + 1)
+        
+        return grouped[['sr_no', 'date', 'travel_distance_km']].to_dict(orient="records")
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
