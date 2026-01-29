@@ -41,11 +41,11 @@ export default function Sidebar() {
           <div className="p-2 bg-white/10 rounded-lg border border-white/10 shadow-inner">
             <Command size={20} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
+          <h1 className="text-2xl font-black tracking-tight text-white font-sans">
             MR Portal
           </h1>
         </div>
-        <p className="text-zinc-400 text-[10px] uppercase tracking-[0.2em] font-medium pl-1">
+        <p className="text-zinc-300 text-[10px] uppercase tracking-[0.2em] font-bold pl-1">
           Management System
         </p>
       </div>
@@ -62,7 +62,7 @@ export default function Sidebar() {
                 to={item.to}
                 className={`group flex items-center px-4 py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden ${isActive
                   ? 'bg-white/10 text-white shadow-lg border border-white/5'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/5 font-medium'
                   }`}
               >
                 {isActive && (
@@ -73,7 +73,7 @@ export default function Sidebar() {
                   className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-md' : 'group-hover:scale-110'
                     }`}
                 />
-                <span className="font-medium tracking-wide text-sm">{item.label}</span>
+                <span className="font-bold tracking-wide text-sm">{item.label}</span>
 
                 {isActive && (
                   <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-50" />
@@ -95,7 +95,7 @@ export default function Sidebar() {
                 <p className="text-sm font-semibold text-white truncate max-w-[90px]">
                   {user.name || user.user_id}
                 </p>
-                <p className="text-[11px] text-zinc-400 truncate">
+                <p className="text-[11px] text-zinc-300 truncate font-semibold">
                   {user.role === 'admin' ? 'Administrator' : 'Medical Rep.'}
                 </p>
               </div>
@@ -105,7 +105,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/5">
             <button
               onClick={toggleDark}
-              className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-all text-zinc-400 hover:text-white flex justify-center items-center group"
+              className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 rounded-lg transition-all text-zinc-300 hover:text-white flex justify-center items-center group"
               title="Toggle Theme"
             >
               <div className="relative">
@@ -115,7 +115,7 @@ export default function Sidebar() {
             </button>
             <button
               onClick={logout}
-              className="flex-1 py-2.5 bg-white/5 hover:bg-red-500/20 hover:border-red-500/30 border border-transparent rounded-lg transition-all text-zinc-400 hover:text-red-400 flex justify-center items-center group"
+              className="flex-1 py-2.5 bg-white/5 hover:bg-red-500/20 hover:border-red-500/30 border border-transparent rounded-lg transition-all text-zinc-300 hover:text-red-400 flex justify-center items-center group"
               title="Sign Out"
             >
               <LogOut size={18} className="group-hover:translate-x-0.5 transition-transform" />

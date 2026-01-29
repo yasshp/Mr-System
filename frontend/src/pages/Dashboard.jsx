@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Phone, CheckCircle, XCircle, CircleDashed } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, MapPin, Clock, Phone, CheckCircle, XCircle, CircleDashed, Loader2 } from 'lucide-react';
 
 // Fix Leaflet icon
 import L from 'leaflet';
@@ -47,6 +47,9 @@ export default function Dashboard() {
         .then(res => {
           console.log('MR list loaded:', res.data);
           setMrs(res.data || []);
+          if (res.data && res.data.length > 0) {
+            setSelectedMrId(res.data[0].mr_id);
+          }
         })
         .catch(err => {
           console.error('Failed to load MRs:', err);
@@ -69,6 +72,10 @@ export default function Dashboard() {
     // Admin can override with selected MR
     if (isAdmin && selectedMrId) {
       mrIdToUse = selectedMrId;
+    } else if (isAdmin && !selectedMrId) {
+      // If admin and no MR selected, do not fetch yet waiting for auto-select
+      setLoading(false);
+      return;
     }
 
     const endpoint = `/schedule/daily/${encodeURIComponent(mrIdToUse)}/${safeDate}`;
@@ -116,17 +123,17 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-serif text-zinc-900 dark:text-zinc-100 tracking-tight">
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Overview
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2">
+            <p className="text-zinc-900 dark:text-zinc-300 mt-1 flex items-center gap-2 font-medium">
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
               {user?.name || user?.user_id}
             </p>
           </div>
           <button
             onClick={logout}
-            className="px-6 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm font-medium"
+            className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-400 transition-all shadow-md text-sm font-bold flex items-center gap-2"
           >
             Sign Out
           </button>
@@ -147,7 +154,7 @@ export default function Dashboard() {
             </button>
 
             <span
-              className="font-medium text-lg text-zinc-900 dark:text-zinc-100 min-w-[160px] text-center cursor-pointer hover:text-zinc-600 transition"
+              className="font-black text-xl text-black dark:text-white min-w-[160px] text-center cursor-pointer hover:text-zinc-600 transition"
               onClick={() => document.getElementById('date-input').showPicker()}
             >
               {new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -180,7 +187,7 @@ export default function Dashboard() {
               <select
                 value={selectedMrId}
                 onChange={e => setSelectedMrId(e.target.value)}
-                className="w-full md:w-64 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none"
+                className="w-full md:w-64 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none font-bold"
               >
                 {mrs.map(mr => (
                   <option key={mr.mr_id} value={mr.mr_id}>
@@ -205,9 +212,9 @@ export default function Dashboard() {
             {/* KPI Cards */}
             <div className="grid grid-cols-3 gap-6">
               {[
-                { label: 'Total Visits', value: tasks.length, color: 'text-zinc-900 dark:text-zinc-100' },
-                { label: 'Completed', value: completedTasks.length, color: 'text-green-600 dark:text-green-500' },
-                { label: 'Cancelled', value: cancelledTasks.length, color: 'text-red-600 dark:text-red-500' }
+                { label: 'Total Visits', value: tasks.length, color: 'text-black dark:text-white' },
+                { label: 'Completed', value: completedTasks.length, color: 'text-green-700 dark:text-green-400' },
+                { label: 'Cancelled', value: cancelledTasks.length, color: 'text-red-700 dark:text-red-400' }
               ].map((kpi, i) => (
                 <motion.div
                   key={i}
@@ -217,8 +224,8 @@ export default function Dashboard() {
                   className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl p-6 rounded-xl border border-zinc-200/50 dark:border-white/10 shadow-sm relative overflow-hidden group"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
-                  <p className="text-xs uppercase tracking-wider text-zinc-500 font-medium relative z-10">{kpi.label}</p>
-                  <p className={`text-4xl font-light mt-2 ${kpi.color} relative z-10`}>{kpi.value}</p>
+                  <p className="text-xs uppercase tracking-wider text-black dark:text-zinc-300 font-extrabold relative z-10">{kpi.label}</p>
+                  <p className={`text-5xl font-black mt-2 ${kpi.color} relative z-10`}>{kpi.value}</p>
                 </motion.div>
               ))}
             </div>
@@ -241,10 +248,10 @@ export default function Dashboard() {
               {/* Planned */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-400"></div> Planned
+                  <h3 className="font-extrabold text-black dark:text-white flex items-center gap-2 text-lg">
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div> Planned
                   </h3>
-                  <span className="text-xs text-zinc-400">{plannedTasks.length}</span>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{plannedTasks.length}</span>
                 </div>
                 {plannedTasks.map((task) => (
                   <TaskCard key={task.activity_id} task={task} status="Planned" onUpdate={updateTaskStatus} onClick={setSelectedTask} />
@@ -255,10 +262,10 @@ export default function Dashboard() {
               {/* Completed */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div> Completed
+                  <h3 className="font-extrabold text-black dark:text-white flex items-center gap-2 text-lg">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-600"></div> Completed
                   </h3>
-                  <span className="text-xs text-zinc-400">{completedTasks.length}</span>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{completedTasks.length}</span>
                 </div>
                 {completedTasks.map((task) => (
                   <TaskCard key={task.activity_id} task={task} status="Completed" onUpdate={updateTaskStatus} />
@@ -269,10 +276,10 @@ export default function Dashboard() {
               {/* Cancelled */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div> Cancelled
+                  <h3 className="font-extrabold text-black dark:text-white flex items-center gap-2 text-lg">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-600"></div> Cancelled
                   </h3>
-                  <span className="text-xs text-zinc-400">{cancelledTasks.length}</span>
+                  <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{cancelledTasks.length}</span>
                 </div>
                 {cancelledTasks.map((task) => (
                   <TaskCard key={task.activity_id} task={task} status="Cancelled" onUpdate={updateTaskStatus} />
@@ -294,7 +301,7 @@ export default function Dashboard() {
 function EmptyState() {
   return (
     <div className="py-8 text-center border border-dashed border-zinc-300/50 dark:border-white/10 rounded-xl bg-zinc-50/30 dark:bg-zinc-900/30 backdrop-blur-sm">
-      <p className="text-xs text-zinc-400">No activities</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold uppercase tracking-wider">No activities</p>
     </div>
   )
 }
@@ -315,7 +322,7 @@ function TaskDetailsModal({ task, onClose }) {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{task.customer_name}</h3>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">Activity Details</p>
+              <p className="text-sm text-zinc-900 dark:text-zinc-300 font-medium">Activity Details</p>
             </div>
             <button onClick={onClose} className="p-1 hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-colors text-zinc-500">
               <XCircle size={20} />
@@ -328,29 +335,29 @@ function TaskDetailsModal({ task, onClose }) {
                 <Phone size={18} />
               </div>
               <div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-semibold">Activity Type</p>
-                <p className="text-sm font-medium text-zinc-900 dark:text-white capitalize">{task.activity_type || 'Visit'}</p>
+                <p className="text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider font-extrabold">Activity Type</p>
+                <p className="text-sm font-bold text-zinc-900 dark:text-white capitalize">{task.activity_type || 'Visit'}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-zinc-50 dark:bg-white/5 rounded-lg">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
+                <p className="text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider font-extrabold mb-1 flex items-center gap-1">
                   <Clock size={12} /> Time
                 </p>
-                <p className="text-sm font-medium text-zinc-900 dark:text-white">{task.start_time} - {task.end_time}</p>
+                <p className="text-sm font-bold text-zinc-900 dark:text-white">{task.start_time} - {task.end_time}</p>
               </div>
               <div className="p-3 bg-zinc-50 dark:bg-white/5 rounded-lg">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
+                <p className="text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider font-extrabold mb-1 flex items-center gap-1">
                   <MapPin size={12} /> Distance
                 </p>
-                <p className="text-sm font-medium text-zinc-900 dark:text-white">{task.distance_km ? `${task.distance_km} km` : 'N/A'}</p>
+                <p className="text-sm font-bold text-zinc-900 dark:text-white">{task.distance_km ? `${task.distance_km} km` : 'N/A'}</p>
               </div>
             </div>
 
             <div className="p-3 bg-zinc-50 dark:bg-white/5 rounded-lg">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-semibold mb-1">Location</p>
-              <p className="text-sm font-medium text-zinc-900 dark:text-white">{task.locality}</p>
+              <p className="text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider font-extrabold mb-1">Location</p>
+              <p className="text-sm font-bold text-zinc-900 dark:text-white">{task.locality}</p>
             </div>
           </div>
         </div>
@@ -368,6 +375,22 @@ function TaskDetailsModal({ task, onClose }) {
 }
 
 function TaskCard({ task, status, onUpdate, onClick }) {
+  const [processing, setProcessing] = useState(null);
+
+  const handleUpdate = async (newStatus) => {
+    setProcessing(newStatus);
+    try {
+      if (onUpdate) {
+        await onUpdate(task.activity_id, newStatus);
+      }
+    } finally {
+      // Small delay to ensure animation is visible if operation is instant, 
+      // though mostly valuable if component doesn't unmount immediately.
+      // If component unmounts (moved to another list), this update is ignored.
+      setProcessing(null);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -375,14 +398,14 @@ function TaskCard({ task, status, onUpdate, onClick }) {
       onClick={() => status === 'Planned' && onClick && onClick(task)}
       className={`bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md p-4 rounded-xl border border-zinc-200/60 dark:border-white/10 shadow-sm transition-all group ${status === 'Planned' ? 'cursor-pointer hover:shadow-md hover:border-zinc-300 dark:hover:border-white/20' : ''}`}
     >
-      <h4 className="font-semibold text-zinc-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+      <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
         {task.customer_name}
       </h4>
       <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">
           <Clock size={14} /> {task.start_time} - {task.end_time}
         </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">
           <MapPin size={14} /> {task.locality}
         </div>
       </div>
@@ -390,26 +413,47 @@ function TaskCard({ task, status, onUpdate, onClick }) {
       <div className="mt-4 flex gap-2 pt-3 border-t border-zinc-100 dark:border-white/5" onClick={e => e.stopPropagation()}>
         {status !== 'Completed' && (
           <button
-            onClick={() => onUpdate(task.activity_id, 'Done')}
-            className="flex-1 py-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs rounded font-medium hover:opacity-90 transition shadow-sm"
+            onClick={() => handleUpdate('Done')}
+            disabled={!!processing}
+            className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 text-white dark:text-zinc-900 text-xs rounded font-bold hover:shadow-lg hover:scale-[1.02] transition-all shadow-sm flex items-center justify-center gap-2 ${processing === 'Done' ? 'opacity-80 cursor-wait' : ''}`}
           >
-            Complete
+            {processing === 'Done' ? (
+              <>
+                <Loader2 className="animate-spin" size={12} />
+                Processing...
+              </>
+            ) : (
+              'Complete'
+            )}
           </button>
         )}
         {status === 'Completed' && (
           <button
-            onClick={() => onUpdate(task.activity_id, 'Pending')}
-            className="flex-1 py-1.5 bg-zinc-100 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 text-xs rounded font-medium hover:bg-zinc-200 dark:hover:bg-white/20 transition"
+            onClick={() => handleUpdate('Pending')}
+            disabled={!!processing}
+            className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 text-zinc-900 dark:text-zinc-300 text-xs rounded font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition flex items-center justify-center gap-2 ${processing === 'Pending' ? 'opacity-80 cursor-wait' : ''}`}
           >
-            Revert
+            {processing === 'Pending' ? (
+              <>
+                <Loader2 className="animate-spin" size={12} />
+                Reverting...
+              </>
+            ) : (
+              'Revert'
+            )}
           </button>
         )}
         {status !== 'Cancelled' && (
           <button
-            onClick={() => onUpdate(task.activity_id, 'Cancelled')}
-            className="px-3 py-1.5 border border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-400 text-xs rounded font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition"
+            onClick={() => handleUpdate('Cancelled')}
+            disabled={!!processing}
+            className={`px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs rounded font-bold hover:from-red-100 hover:to-red-200 transition flex items-center justify-center gap-2 ${processing === 'Cancelled' ? 'opacity-80 cursor-wait' : ''}`}
           >
-            Cancel
+            {processing === 'Cancelled' ? (
+              <Loader2 className="animate-spin" size={12} />
+            ) : (
+              'Cancel'
+            )}
           </button>
         )}
       </div>

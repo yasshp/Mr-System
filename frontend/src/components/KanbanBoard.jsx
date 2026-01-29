@@ -12,7 +12,7 @@ export default function KanbanBoard({ pending, completed, onStatusUpdate }) {
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-    
+
     if (!over) return;
 
     // If dropped in different column
@@ -42,14 +42,14 @@ export default function KanbanBoard({ pending, completed, onStatusUpdate }) {
           <SortableContext id="pending" items={pending.map(t => t.activity_id)} strategy={verticalListSortingStrategy}>
             <div className="p-4 space-y-4 min-h-[400px]">
               {pending.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-12 text-gray-700 dark:text-gray-300 font-medium">
                   No pending tasks for today
                 </div>
               ) : (
                 pending.map(task => (
-                  <KanbanCard 
-                    key={task.activity_id} 
-                    task={task} 
+                  <KanbanCard
+                    key={task.activity_id}
+                    task={task}
                     column="pending"
                   />
                 ))
@@ -68,14 +68,14 @@ export default function KanbanBoard({ pending, completed, onStatusUpdate }) {
           <SortableContext id="completed" items={completed.map(t => t.activity_id)} strategy={verticalListSortingStrategy}>
             <div className="p-4 space-y-4 min-h-[400px]">
               {completed.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-12 text-gray-700 dark:text-gray-300 font-medium">
                   No completed tasks yet
                 </div>
               ) : (
                 completed.map(task => (
-                  <KanbanCard 
-                    key={task.activity_id} 
-                    task={task} 
+                  <KanbanCard
+                    key={task.activity_id}
+                    task={task}
                     column="completed"
                   />
                 ))

@@ -20,6 +20,10 @@ export default function Reports() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const tabs = [
     { id: 'activity', label: 'Activity Report', icon: BarChart, hasDateRange: true },
     { id: 'compliance', label: 'Compliance Report', icon: UserCheck, hasDateRange: false },
@@ -63,6 +67,7 @@ export default function Reports() {
   };
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when filtering changes
     fetchReport();
   }, [activeTab, startDate, endDate, month, year, mrId]);
 
@@ -94,16 +99,16 @@ export default function Reports() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-serif text-zinc-900 dark:text-zinc-100 tracking-tight">
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Reports
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+            <p className="text-zinc-900 dark:text-zinc-300 mt-1 font-medium">
               Analyze performance and compliance
             </p>
           </div>
           <button
             onClick={logout}
-            className="px-6 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm font-medium"
+            className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-400 transition-all shadow-md text-sm font-bold flex items-center gap-2"
           >
             Sign Out
           </button>
@@ -115,9 +120,9 @@ export default function Reports() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-3 rounded-xl font-medium text-sm transition-all border flex items-center justify-center gap-2 ${activeTab === tab.id
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-md'
-                : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+              className={`px-5 py-3 rounded-xl font-bold text-sm transition-all border flex items-center justify-center gap-2 ${activeTab === tab.id
+                ? 'bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-lg scale-[1.02]'
+                : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 font-bold'
                 }`}
             >
               <tab.icon size={18} />
@@ -131,32 +136,32 @@ export default function Reports() {
           {tabs.find(t => t.id === activeTab).hasDateRange ? (
             <>
               <div className="flex items-center gap-3 flex-1">
-                <label className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">Start:</label>
+                <label className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">Start:</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm"
+                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm font-semibold"
                 />
               </div>
               <div className="flex items-center gap-3 flex-1">
-                <label className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">End:</label>
+                <label className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">End:</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
-                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm"
+                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm font-semibold"
                 />
               </div>
             </>
           ) : (
             <>
               <div className="flex items-center gap-3 flex-1">
-                <label className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">Month:</label>
+                <label className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm">Month:</label>
                 <select
                   value={month}
                   onChange={e => setMonth(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm"
+                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm font-bold"
                 >
                   {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                     <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
@@ -164,12 +169,12 @@ export default function Reports() {
                 </select>
               </div>
               <div className="flex items-center gap-3 flex-1">
-                <label className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">Year:</label>
+                <label className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm">Year:</label>
                 <input
                   type="number"
                   value={year}
                   onChange={e => setYear(parseInt(e.target.value))}
-                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm"
+                  className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm font-bold"
                   min={2020}
                   max={2030}
                 />
@@ -179,11 +184,11 @@ export default function Reports() {
 
           {isAdmin && (
             <div className="flex items-center gap-3 flex-1">
-              <label className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">MR:</label>
+              <label className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">MR:</label>
               <select
                 value={mrId}
                 onChange={e => setMrId(e.target.value)}
-                className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm"
+                className="px-3 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none flex-1 text-sm font-semibold"
               >
                 {mrs.map(mr => (
                   <option key={mr.mr_id} value={mr.mr_id}>
@@ -200,7 +205,7 @@ export default function Reports() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-800 dark:border-zinc-200 border-t-transparent"></div>
-              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">Generatng report...</p>
+              <p className="mt-4 text-sm text-zinc-700 dark:text-zinc-300">Generatng report...</p>
             </div>
           ) : error ? (
             <div className="text-center py-20 text-red-500">
@@ -208,7 +213,7 @@ export default function Reports() {
               <p className="text-lg font-medium">{error}</p>
             </div>
           ) : data.length === 0 ? (
-            <div className="text-center py-20 text-zinc-400 dark:text-zinc-600">
+            <div className="text-center py-20 text-zinc-600 dark:text-zinc-400">
               <FileText size={64} className="mx-auto mb-4 opacity-50" />
               <p className="text-xl font-medium">No data available</p>
               <p className="mt-2 text-sm">Try adjusting your filters</p>
@@ -220,8 +225,7 @@ export default function Reports() {
                   {tabs.find(t => t.id === activeTab).label}
                 </h2>
                 <button
-                  onClick={exportToCSV}
-                  className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all flex items-center gap-2 text-sm font-medium shadow-sm"
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg hover:from-indigo-500 hover:to-indigo-400 transition-all flex items-center gap-2 text-sm font-bold shadow-md"
                 >
                   <Download size={16} />
                   Export CSV
@@ -230,20 +234,20 @@ export default function Reports() {
 
               <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
                 <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900/50">
+                  <thead className="bg-zinc-900 text-white dark:bg-zinc-950">
                     <tr>
                       {columns.map(col => (
-                        <th key={col} className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        <th key={col} className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider border-b border-zinc-700">
                           {col.replace('_', ' ').toUpperCase()}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-800">
-                    {data.map((row, index) => (
-                      <tr key={index} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                    {data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((row, index) => (
+                      <tr key={index} className="hover:bg-blue-50 dark:hover:bg-blue-900/10 even:bg-zinc-50 dark:even:bg-white/5 transition-colors">
                         {columns.map(col => (
-                          <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300">
+                          <td key={col} className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-extrabold">
                             {row[col] ?? '-'}
                           </td>
                         ))}
@@ -252,6 +256,68 @@ export default function Reports() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {data.length > itemsPerPage && (
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-zinc-700 dark:text-zinc-300">
+                  <p>
+                    Showing {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, data.length)} of {data.length}
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1.5 rounded border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 transition-colors ${currentPage === 1
+                        ? 'bg-zinc-50 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
+                        : 'bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                        }`}
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, Math.ceil(data.length / itemsPerPage)) }, (_, i) => {
+                        let pageNum;
+                        const totalPages = Math.ceil(data.length / itemsPerPage);
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs transition-all ${currentPage === pageNum
+                              ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                              : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                              }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(data.length / itemsPerPage)))}
+                      disabled={currentPage === Math.ceil(data.length / itemsPerPage)}
+                      className={`px-3 py-1.5 rounded border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 transition-colors ${currentPage === Math.ceil(data.length / itemsPerPage)
+                        ? 'bg-zinc-50 dark:bg-zinc-800 text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
+                        : 'bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                        }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {activeTab === 'activity' && totalCount > 0 && (
                 <div className="mt-6 flex justify-end gap-8 border-t border-zinc-100 dark:border-zinc-800 pt-4">

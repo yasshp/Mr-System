@@ -13,7 +13,7 @@ L.Icon.Default.mergeOptions({
 export default function MapView({ tasks }) {
   if (!tasks?.length || !tasks[0]?.latitude) {
     return (
-      <div className="h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
+      <div className="h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-700 dark:text-gray-300 font-medium">
         No location data available for this day
       </div>
     );
@@ -32,11 +32,11 @@ export default function MapView({ tasks }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
-        
+
         {tasks.map(task => {
           if (!task.latitude || !task.longitude) return null;
           return (
-            <Marker 
+            <Marker
               key={task.activity_id}
               position={[parseFloat(task.latitude), parseFloat(task.longitude)]}
             >
@@ -50,10 +50,10 @@ export default function MapView({ tasks }) {
         })}
 
         {positions.length > 1 && (
-          <Polyline 
-            positions={positions} 
-            color="#4f46e5" 
-            weight={4} 
+          <Polyline
+            positions={positions}
+            color="#4f46e5"
+            weight={4}
             opacity={0.7}
           />
         )}

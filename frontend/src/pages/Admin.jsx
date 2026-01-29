@@ -99,16 +99,16 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-serif text-zinc-900 dark:text-zinc-100 tracking-tight">
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Admin Console
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+            <p className="text-zinc-700 dark:text-zinc-300 mt-1 font-semibold">
               Data management and scheduling
             </p>
           </div>
           <button
             onClick={logout}
-            className="px-6 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm font-medium"
+            className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg hover:from-red-500 hover:to-red-400 transition-all shadow-md text-sm font-bold flex items-center gap-2"
           >
             Sign Out
           </button>
@@ -124,9 +124,9 @@ export default function AdminDashboard() {
           <button
             onClick={generateSchedule}
             disabled={generating}
-            className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 shadow-sm ${generating
+            className={`w-full sm:w-auto px-6 py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${generating
               ? 'bg-zinc-300 cursor-not-allowed text-zinc-500'
-              : 'bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900'
+              : 'bg-gradient-to-r from-zinc-900 to-zinc-700 hover:from-zinc-800 hover:to-zinc-600 text-white dark:from-zinc-100 dark:to-zinc-300 dark:text-zinc-900'
               }`}
           >
             {generating ? (
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-center text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <p className="text-center text-sm font-bold text-zinc-900 dark:text-zinc-100">
                 {statusMessage}
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
                 value={selectedTable}
                 onChange={(e) => setSelectedTable(e.target.value)}
                 disabled={loading || generating}
-                className="px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none w-full sm:w-60 text-sm"
+                className="px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-zinc-500 outline-none w-full sm:w-60 text-sm font-semibold"
               >
                 {tables.map((table) => (
                   <option key={table} value={table}>
@@ -179,9 +179,9 @@ export default function AdminDashboard() {
               <button
                 onClick={() => fetchTableData(1)}
                 disabled={loading || generating}
-                className={`px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-sm text-sm border ${loading || generating
+                className={`px-4 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-sm text-sm border ${loading || generating
                   ? 'bg-zinc-100 text-zinc-400 border-zinc-200'
-                  : 'bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300'
+                  : 'bg-gradient-to-r from-zinc-100 to-zinc-200 dark:bg-zinc-800 border-zinc-200 hover:bg-zinc-200 text-zinc-900 dark:border-zinc-700 dark:text-zinc-300'
                   }`}
               >
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <RefreshCw size={16} />}
@@ -204,19 +204,19 @@ export default function AdminDashboard() {
           ) : data.length === 0 ? (
             <div className="text-center py-20 text-zinc-400 flex flex-col items-center gap-4">
               <FileText size={48} className="opacity-40" />
-              <p className="text-lg font-medium">No results</p>
+              <p className="text-lg font-bold text-zinc-500">No results</p>
             </div>
           ) : (
             <>
               {/* Scrollable Table */}
               <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-zinc-200 dark:border-zinc-800 rounded-lg">
                 <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800">
-                  <thead className="bg-zinc-50 dark:bg-zinc-900/50 sticky top-0 z-10">
+                  <thead className="bg-zinc-900 text-white dark:bg-zinc-950 sticky top-0 z-10">
                     <tr>
                       {columns.map((col) => (
                         <th
                           key={col}
-                          className="px-6 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider dark:text-zinc-400"
+                          className="px-6 py-4 text-left text-xs font-black uppercase tracking-wider border-b border-zinc-700"
                         >
                           {col}
                         </th>
@@ -225,11 +225,11 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-800">
                     {data.map((row, i) => (
-                      <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                      <tr key={i} className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors even:bg-zinc-50 dark:even:bg-zinc-900/50">
                         {columns.map((col) => (
                           <td
                             key={col}
-                            className="px-6 py-4 whitespace-nowrap text-sm text-zinc-700 dark:text-zinc-300"
+                            className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-100 font-extrabold"
                           >
                             {row[col] ?? '-'}
                           </td>
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
 
               {/* Pagination Controls */}
               {totalRecords > 0 && (
-                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
+                <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-zinc-700 dark:text-zinc-300">
                   <p>
                     Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalRecords)} of {totalRecords}
                   </p>
