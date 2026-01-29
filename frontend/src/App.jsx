@@ -7,56 +7,56 @@ import Reports from './pages/Reports';
 import Admin from './pages/Admin';
 import Sidebar from './components/Sidebar';
 
+const ProtectedLayout = ({ children, adminOnly = false }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-zinc-950">
+      <Sidebar />
+      <main className="flex-1 overflow-auto w-full relative">
+        {children}
+      </main>
+    </div>
+  );
+};
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="flex h-screen">
-          <Sidebar />
-          <main className="flex-1 overflow-auto">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/reports" element={
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute adminOnly>
-                  <Admin />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </main>
-        </div>
+        <Routes>
+          {/* Public Routes - No Sidebar */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Protected Routes - With Sidebar */}
+          <Route path="/dashboard" element={
+            <ProtectedLayout>
+              <Dashboard />
+            </ProtectedLayout>
+          } />
+          <Route path="/reports" element={
+            <ProtectedLayout>
+              <Reports />
+            </ProtectedLayout>
+          } />
+          <Route path="/admin" element={
+            <ProtectedLayout adminOnly>
+              <Admin />
+            </ProtectedLayout>
+          } />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
 }
 
-// Keep your ProtectedRoute component as-is
-function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, loading } = useAuth();   // ← this line now works after import
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
-}
 
 export default App;
