@@ -4,3 +4,4 @@ gspread
 pandas
 google-auth
 google-auth-oauthlib
+pyjwt
