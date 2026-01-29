@@ -9,6 +9,16 @@ from app.services.supabase_db import supabase
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
+
+@router.get("/debug-health")
+def debug_reports_health():
+    """Check if reports router can access DB"""
+    try:
+        res = supabase.table("master_schedule").select("count", count="exact").limit(1).execute()
+        return {"status": "ok", "total_rows": res.count, "timestamp": datetime.now().isoformat()}
+    except Exception as e:
+         return {"status": "error", "detail": str(e)}
+
 def get_db_data(table="master_schedule", mr_id=None, start_date=None, end_date=None, year=None, month=None):
     """
     Helper to fetch data efficiently from DB.
@@ -20,11 +30,15 @@ def get_db_data(table="master_schedule", mr_id=None, start_date=None, end_date=N
     
     # 1. MR Filter
     if mr_id and mr_id.lower() != 'admin':
-        query = query.eq("mr_id", mr_id)
+        # Robust filtering: strip whitespace and use case-insensitive match
+        clean_mr_id = mr_id.strip()
+        if clean_mr_id:
+            # We use distinct logic to handle potential casing issues
+            query = query.ilike("mr_id", clean_mr_id) 
 
     # 2. Date Range
     if start_date and end_date:
-        query = query.gte("date", start_date).lte("date", end_date)
+        query = query.gte("date", start_date.strip()).lte("date", end_date.strip())
     
     # 3. Month/Year Logic
     if year and month:
