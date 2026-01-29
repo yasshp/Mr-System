@@ -73,8 +73,8 @@ def generate_smart_daily_schedule(mr, date_obj):
     if len(nearby_docs) < 8:
         nearby_docs.extend(random.sample(DOCTOR_DB, min(len(DOCTOR_DB), 8 - len(nearby_docs))))
         
-    # Shuffle and pick workload (6-10 visits)
-    workload_count = random.randint(6, 10)
+    # Shuffle and pick workload (6-9 visits for realism, user requested max 8-9)
+    workload_count = random.randint(6, 9)
     selected_docs = random.sample(nearby_docs, min(len(nearby_docs), workload_count))
     
     daily_tasks = []
@@ -157,11 +157,18 @@ while curr <= END_DATE:
     # Flush every 5 days (~500-800 rows)
     if len(batch_buffer) > 500:
         try:
+             # Delete existing data in this date range to prevent doubling up (15-18 tasks)
+             dates_in_batch = list(set(t['date'] for t in batch_buffer))
+             # Naive delete: Delete all for these dates before insert
+             # In prod this is slow, but fine for script
+             for d in dates_in_batch:
+                 supabase.table("master_schedule").delete().eq("date", d).execute()
+
              # Insert
-            supabase.table("master_schedule").insert(batch_buffer).execute()
-            print(f"✅ Flushed {len(batch_buffer)} tasks up to {curr}")
-            total_tasks += len(batch_buffer)
-            batch_buffer = []
+             supabase.table("master_schedule").insert(batch_buffer).execute()
+             print(f"✅ Flushed {len(batch_buffer)} tasks up to {curr}")
+             total_tasks += len(batch_buffer)
+             batch_buffer = []
         except Exception as e:
             print(f"Error inserting: {e}")
             batch_buffer = [] # Clear to prevent stuck loop
