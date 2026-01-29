@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import pandas as pd
 from datetime import datetime, timedelta
 
-from app.services.gsheets import load_data
+from app.services.supabase_db import load_data
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 

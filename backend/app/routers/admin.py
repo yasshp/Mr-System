@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import Optional, Dict, Any
 import pandas as pd
-from app.services.gsheets import load_data, save_data
+from app.services.supabase_db import load_data, save_data
 from app.services.logic import run_schedule_logic_for_single_mr
 import traceback
 

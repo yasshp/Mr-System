@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import datetime
 import traceback
 
-from app.services.gsheets import load_data, save_data
+from app.services.supabase_db import load_data, save_data
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 

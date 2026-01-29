@@ -28,7 +28,7 @@ from PIL import Image, ImageEnhance
 from xgboost import XGBRegressor
 from sklearn.preprocessing import LabelEncoder
 import warnings
-from app.services.gsheets import load_data, save_data  # <--- IMPORT THE NEW DATABASE FILE
+from app.services.supabase_db import load_data, save_data  # <--- IMPORT THE NEW DATABASE FILE
 
 warnings.filterwarnings('ignore')
 

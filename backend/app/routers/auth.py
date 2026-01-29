@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import jwt
 from datetime import datetime, timedelta
-from app.services.gsheets import load_data
+from app.services.supabase_db import load_data
 import pandas as pd
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
