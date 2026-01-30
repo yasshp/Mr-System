@@ -110,19 +110,23 @@ def generate_smart_daily_schedule(mr, date_obj):
              status = "Planned"
              
         # Jitter location slightly so markers don't overlap perfectly if multiple MRs visit same hospital
-        loc_jitter = 0.0005 
-        
+        loc_jitter = 0.0005
+        task_distance = round(random.uniform(1.0, 15.0), 2)
+        # Calculate travel time (Avg city speed ~25 km/h)
+        speed_kmh = 25
+        travel_time = int((task_distance / speed_kmh) * 60)
+
         task = {
             "mr_id": mr['mr_id'],
-            "team": mr.get('team', 'General'), # Added
-            "zone": mr.get('zone', 'North'),   # Added
+            "team": mr.get('team', 'General'),
+            "zone": mr.get('zone', 'North'),
             "date": date_obj.isoformat(),
             "activity_id": f"SMART_{mr['mr_id']}_{uuid.uuid4().hex[:8]}",
             "status": status,
             "customer_id": f"DOC_{doc['name'][:3].upper()}_{random.randint(100,999)}",
             "customer_name": doc['name'],
-            "contact_person": "Reception" if "Hospital" in doc['name'] else doc['name'], # Added
-            "customer_status": "Key" if i < 2 else "Regular", # First 2 are key
+            "contact_person": "Reception" if "Hospital" in doc['name'] else doc['name'],
+            "customer_status": "Key" if i < 2 else "Regular", # Kept as standard MR metric
             "activity_type": random.choice(ACTIVITY_TYPES),
             "locality": doc['locality'],
             "latitude": doc['lat'] + random.uniform(-loc_jitter, loc_jitter),
@@ -130,13 +134,14 @@ def generate_smart_daily_schedule(mr, date_obj):
             "start_time": time_str_start,
             "end_time": time_str_end,
             "duration_min": duration,
-            "distance_km": round(random.uniform(1.0, 15.0), 2) # Simulated travel
+            "distance_km": task_distance,
+            "travel_duration_min": travel_time
         }
         
         daily_tasks.append(task)
         
         # Travel time to next (15-45 mins)
-        current_time_min = end_time_min + random.randint(15, 45)
+        current_time_min = end_time_min + travel_time + random.randint(5, 10) # Travel + Buffer
 
     return daily_tasks
 
