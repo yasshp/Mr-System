@@ -119,8 +119,7 @@ def get_compliance_report(month: int, year: int, mr_id: Optional[str] = None):
         # visits['sr_no'] = range(1, len(visits) + 1) # Removed
         visits['monthly_range'] = f"{calendar.month_name[month]} {year}"
         # If logical 'compliance' needs target data, that's missing. 
-        # For now we return what the frontend expects: visits count.
-        visits['compliance_dates'] = visits['visit_count'] 
+        # For now we return what the frontend expects: visits count. 
 
         return visits.to_dict(orient="records")
     except Exception as e:
