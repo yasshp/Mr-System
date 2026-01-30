@@ -28,11 +28,20 @@ const createNumberedIcon = (number, status) => {
   });
 };
 
+// Helper for local date string YYYY-MM-DD
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.user_id?.toLowerCase() === 'admin';
 
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getLocalDateString());
   const [selectedMrId, setSelectedMrId] = useState(''); // empty = current user or all
   const [mrs, setMrs] = useState([]); // MR list for admin dropdown
   const [tasks, setTasks] = useState([]);
@@ -254,7 +263,14 @@ export default function Dashboard() {
                   <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{plannedTasks.length}</span>
                 </div>
                 {plannedTasks.map((task) => (
-                  <TaskCard key={task.activity_id} task={task} status="Planned" onUpdate={updateTaskStatus} onClick={setSelectedTask} />
+                  <TaskCard
+                    key={task.activity_id}
+                    task={task}
+                    status="Planned"
+                    onUpdate={updateTaskStatus}
+                    onClick={setSelectedTask}
+                    isEditable={date === getLocalDateString()}
+                  />
                 ))}
                 {plannedTasks.length === 0 && <EmptyState />}
               </div>
@@ -268,7 +284,13 @@ export default function Dashboard() {
                   <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{completedTasks.length}</span>
                 </div>
                 {completedTasks.map((task) => (
-                  <TaskCard key={task.activity_id} task={task} status="Completed" onUpdate={updateTaskStatus} />
+                  <TaskCard
+                    key={task.activity_id}
+                    task={task}
+                    status="Completed"
+                    onUpdate={updateTaskStatus}
+                    isEditable={date === getLocalDateString()}
+                  />
                 ))}
                 {completedTasks.length === 0 && <EmptyState />}
               </div>
@@ -282,7 +304,13 @@ export default function Dashboard() {
                   <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{cancelledTasks.length}</span>
                 </div>
                 {cancelledTasks.map((task) => (
-                  <TaskCard key={task.activity_id} task={task} status="Cancelled" onUpdate={updateTaskStatus} />
+                  <TaskCard
+                    key={task.activity_id}
+                    task={task}
+                    status="Cancelled"
+                    onUpdate={updateTaskStatus}
+                    isEditable={date === getLocalDateString()}
+                  />
                 ))}
                 {cancelledTasks.length === 0 && <EmptyState />}
               </div>
@@ -374,7 +402,7 @@ function TaskDetailsModal({ task, onClose }) {
   );
 }
 
-function TaskCard({ task, status, onUpdate, onClick }) {
+function TaskCard({ task, status, onUpdate, onClick, isEditable = true }) {
   const [processing, setProcessing] = useState(null);
 
   const handleUpdate = async (newStatus) => {
@@ -410,53 +438,55 @@ function TaskCard({ task, status, onUpdate, onClick }) {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2 pt-3 border-t border-zinc-100 dark:border-white/5" onClick={e => e.stopPropagation()}>
-        {status !== 'Completed' && (
-          <button
-            onClick={() => handleUpdate('Done')}
-            disabled={!!processing}
-            className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 text-white dark:text-zinc-900 text-xs rounded font-bold hover:shadow-lg hover:scale-[1.02] transition-all shadow-sm flex items-center justify-center gap-2 ${processing === 'Done' ? 'opacity-80 cursor-wait' : ''}`}
-          >
-            {processing === 'Done' ? (
-              <>
+      {isEditable && (
+        <div className="mt-4 flex gap-2 pt-3 border-t border-zinc-100 dark:border-white/5" onClick={e => e.stopPropagation()}>
+          {status !== 'Completed' && (
+            <button
+              onClick={() => handleUpdate('Done')}
+              disabled={!!processing}
+              className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 text-white dark:text-zinc-900 text-xs rounded font-bold hover:shadow-lg hover:scale-[1.02] transition-all shadow-sm flex items-center justify-center gap-2 ${processing === 'Done' ? 'opacity-80 cursor-wait' : ''}`}
+            >
+              {processing === 'Done' ? (
+                <>
+                  <Loader2 className="animate-spin" size={12} />
+                  Processing...
+                </>
+              ) : (
+                'Complete'
+              )}
+            </button>
+          )}
+          {status === 'Completed' && (
+            <button
+              onClick={() => handleUpdate('Pending')}
+              disabled={!!processing}
+              className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 text-zinc-900 dark:text-zinc-300 text-xs rounded font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition flex items-center justify-center gap-2 ${processing === 'Pending' ? 'opacity-80 cursor-wait' : ''}`}
+            >
+              {processing === 'Pending' ? (
+                <>
+                  <Loader2 className="animate-spin" size={12} />
+                  Reverting...
+                </>
+              ) : (
+                'Revert'
+              )}
+            </button>
+          )}
+          {status !== 'Cancelled' && (
+            <button
+              onClick={() => handleUpdate('Cancelled')}
+              disabled={!!processing}
+              className={`px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs rounded font-bold hover:from-red-100 hover:to-red-200 transition flex items-center justify-center gap-2 ${processing === 'Cancelled' ? 'opacity-80 cursor-wait' : ''}`}
+            >
+              {processing === 'Cancelled' ? (
                 <Loader2 className="animate-spin" size={12} />
-                Processing...
-              </>
-            ) : (
-              'Complete'
-            )}
-          </button>
-        )}
-        {status === 'Completed' && (
-          <button
-            onClick={() => handleUpdate('Pending')}
-            disabled={!!processing}
-            className={`flex-1 py-1.5 bg-gradient-to-r from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 text-zinc-900 dark:text-zinc-300 text-xs rounded font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition flex items-center justify-center gap-2 ${processing === 'Pending' ? 'opacity-80 cursor-wait' : ''}`}
-          >
-            {processing === 'Pending' ? (
-              <>
-                <Loader2 className="animate-spin" size={12} />
-                Reverting...
-              </>
-            ) : (
-              'Revert'
-            )}
-          </button>
-        )}
-        {status !== 'Cancelled' && (
-          <button
-            onClick={() => handleUpdate('Cancelled')}
-            disabled={!!processing}
-            className={`px-3 py-1.5 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs rounded font-bold hover:from-red-100 hover:to-red-200 transition flex items-center justify-center gap-2 ${processing === 'Cancelled' ? 'opacity-80 cursor-wait' : ''}`}
-          >
-            {processing === 'Cancelled' ? (
-              <Loader2 className="animate-spin" size={12} />
-            ) : (
-              'Cancel'
-            )}
-          </button>
-        )}
-      </div>
+              ) : (
+                'Cancel'
+              )}
+            </button>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }

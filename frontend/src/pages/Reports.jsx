@@ -239,6 +239,7 @@ export default function Reports() {
                   {tabs.find(t => t.id === activeTab).label}
                 </h2>
                 <button
+                  onClick={exportToCSV}
                   className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg hover:from-indigo-500 hover:to-indigo-400 transition-all flex items-center gap-2 text-sm font-bold shadow-md"
                 >
                   <Download size={16} />
