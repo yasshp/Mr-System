@@ -108,7 +108,7 @@ export default function Reports() {
 
   const columns = data.length > 0
     ? Object.keys(data[0]).filter(key =>
-      !['actions', 'sr_no'].includes(key.toLowerCase())
+      !['actions', 'sr_no', 'compliance_dates'].includes(key.toLowerCase())
     )
     : [];
 
