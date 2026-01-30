@@ -29,7 +29,7 @@ def get_daily_schedule(mr_id: str, date: str):
         if not supabase:
              raise HTTPException(status_code=500, detail="Database connection failed")
 
-        # 1. Efficient DB Filter
+        # 1. Efficient DB Filter for Master Schedule
         query = supabase.table("master_schedule").select("*")
         
         # Handle Admin requesting ALL data for a date
@@ -39,29 +39,55 @@ def get_daily_schedule(mr_id: str, date: str):
         query = query.eq("date", date)
         
         response = query.execute()
-        data = response.data
+        data_master = response.data or []
+
+        # 2. Fetch from Activities (Past/Completed data)
+        query_act = supabase.table("activities").select("*")
+        if mr_id.lower() != 'admin':
+            query_act = query_act.eq("mr_id", mr_id)
+        query_act = query_act.eq("date", date)
         
-        if not data:
+        response_act = query_act.execute()
+        data_activities = response_act.data or []
+
+        # Process Activities Data
+        if data_activities:
+            # Rename activity_status to status
+            for item in data_activities:
+                if 'activity_status' in item:
+                    item['status'] = item.pop('activity_status')
+        
+        # Combine Data (Activities take precedence if duplicates exist)
+        # We convert to DF immediately to handle deduplication easily
+        df_master = pd.DataFrame(data_master)
+        df_activities = pd.DataFrame(data_activities)
+        
+        dfs = []
+        if not df_activities.empty:
+            dfs.append(df_activities)
+        if not df_master.empty:
+            dfs.append(df_master)
+            
+        if not dfs:
             print("[SCHEDULE GET] No tasks found in DB query.")
             return []
+            
+        df = pd.concat(dfs, ignore_index=True)
 
-        df = pd.DataFrame(data)
-        print(f"[SCHEDULE GET] DB returned {len(df)} rows")
+        print(f"[SCHEDULE GET] DB returned {len(df)} rows (merged)")
 
         # Deduplicate to prevent multiple cards for same activity
+        # Priority is kept by order of concatenation (Activities first)
         if 'activity_id' in df.columns:
-            df = df.drop_duplicates(subset=['activity_id'])
+            df = df.drop_duplicates(subset=['activity_id'], keep='first')
 
-        # --- Safe Contacts merge (phone & segment) ---
-        # Note: Ideally this should also be a DB JOIN, but preserving legacy logic for now
-        # Fetching entire contacts table is less risky (usually < 1000 contacts), 
-        # but strictly speaking we should fix this too. 
-        # For now, let's keep it as is since Contacts is usually smaller than Schedule.
+        # --- Safe Contacts merge (phone, segment, customer_name) ---
         contacts = load_data("Contacts")
         if not contacts.empty:
             
             phone_col = None
             segment_col = None
+            name_col = None
 
             # Phone column search
             phone_keywords = ['phone', 'mobile', 'contact', 'tel', 'cell', 'number']
@@ -78,33 +104,53 @@ def get_daily_schedule(mr_id: str, date: str):
                 if any(kw in lower for kw in segment_keywords):
                     segment_col = col
                     break
+            
+            # Name column search (usually contact_name)
+            name_keywords = ['contact_name', 'name', 'customer_name']
+            for col in contacts.columns:
+                 lower = col.lower().strip()
+                 if any(kw in lower for kw in name_keywords):
+                     name_col = col
+                     break
 
             # Apply merge only if columns exist and customer_id is present
             if 'customer_id' in df.columns and 'contact_id' in contacts.columns: 
-                # Note: Supabase likely returns 'contact_id' (lowercase) not 'Contact_id'
-                
                 # Normalize Contact DF keys
                 contacts.columns = [c.lower() for c in contacts.columns]
                 
+                # Create helper lookup dicts
+                contacts_idx = contacts.set_index('contact_id')
+                
                 if phone_col and phone_col.lower() in contacts.columns:
                     try:
-                        contacts_dict = contacts.set_index('contact_id')[phone_col.lower()].to_dict()
+                        contacts_dict = contacts_idx[phone_col.lower()].to_dict()
                         df['phone'] = df['customer_id'].map(contacts_dict).fillna('N/A')
                     except Exception as e:
-                        print(f"[WARNING] Phone merge failed: {e}")
                         df['phone'] = 'N/A'
                 else:
                     df['phone'] = 'N/A'
 
                 if segment_col and segment_col.lower() in contacts.columns:
                     try:
-                        contacts_dict = contacts.set_index('contact_id')[segment_col.lower()].to_dict()
+                        contacts_dict = contacts_idx[segment_col.lower()].to_dict()
                         df['segment'] = df['customer_id'].map(contacts_dict).fillna('General')
                     except Exception as e:
-                        print(f"[WARNING] Segment merge failed: {e}")
                         df['segment'] = 'General'
                 else:
                     df['segment'] = 'General'
+                    
+                # Fix missing customer_name (from activities)
+                if 'customer_name' not in df.columns:
+                    df['customer_name'] = None # Initialize if completely missing
+                
+                if name_col and name_col.lower() in contacts.columns:
+                    try:
+                        name_dict = contacts_idx[name_col.lower()].to_dict()
+                        # Only fill if missing (NaN or None)
+                        df['customer_name'] = df['customer_name'].fillna(df['customer_id'].map(name_dict))
+                    except Exception as e:
+                        print(f"[WARNING] Name merge failed: {e}")
+                        
             else:
                  df['phone'] = 'N/A'
                  df['segment'] = 'General'
@@ -114,6 +160,11 @@ def get_daily_schedule(mr_id: str, date: str):
             
         # Nan handling for JSON
         df = df.fillna('')
+        
+        # Determine Lat/Long if missing (e.g. from activities if they don't capture it?)
+        # Actually activities has lat/long. 
+        # But if missing, could fallback to contacts lat/long?
+        # For now, trust the data.
 
         # Return result
         return df.to_dict(orient="records")
