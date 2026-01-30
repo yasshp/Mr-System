@@ -114,11 +114,14 @@ def generate_smart_daily_schedule(mr, date_obj):
         
         task = {
             "mr_id": mr['mr_id'],
+            "team": mr.get('team', 'General'), # Added
+            "zone": mr.get('zone', 'North'),   # Added
             "date": date_obj.isoformat(),
             "activity_id": f"SMART_{mr['mr_id']}_{uuid.uuid4().hex[:8]}",
             "status": status,
             "customer_id": f"DOC_{doc['name'][:3].upper()}_{random.randint(100,999)}",
             "customer_name": doc['name'],
+            "contact_person": "Reception" if "Hospital" in doc['name'] else doc['name'], # Added
             "customer_status": "Key" if i < 2 else "Regular", # First 2 are key
             "activity_type": random.choice(ACTIVITY_TYPES),
             "locality": doc['locality'],
