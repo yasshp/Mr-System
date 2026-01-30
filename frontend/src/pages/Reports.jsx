@@ -34,7 +34,12 @@ export default function Reports() {
   useEffect(() => {
     if (isAdmin) {
       api.get('/admin/mrs')
-        .then(res => setMrs(res.data || []))
+        .then(res => {
+          setMrs(res.data || []);
+          if (res.data && res.data.length > 0) {
+            setMrId(res.data[0].mr_id);
+          }
+        })
         .catch(err => {
           console.error('Failed to load MRs:', err);
           setMrs([]);

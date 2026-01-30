@@ -1,24 +1,33 @@
 
 import os
-from supabase import create_client, Client
-from dotenv import load_dotenv
+import sys
+import pandas as pd
 
-load_dotenv()
-supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+# Add parent directory to path to import app modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Fetch first 10 rows of master_schedule
-print("--- Printing first 5 rows of master_schedule ---")
-try:
-    res = supabase.table("master_schedule").select("mr_id, date, customer_name").limit(5).execute()
-    for row in res.data:
-        print(row)
-        
-    # Check distinct MR_IDs (not easily doable in Supabase API without RPC, so just searching for 'MR')
-    print("\n--- Searching for 'MR' in mr_id column ---")
-    res_mr = supabase.table("master_schedule").select("*").ilike("mr_id", "%MR%").limit(5).execute()
-    print(f"Found {len(res_mr.data)} rows matching '%MR%'")
-    if res_mr.data:
-        print(f"Sample: {res_mr.data[0]['mr_id']}")
+from app.services.supabase_db import supabase
 
-except Exception as e:
-    print(e)
+def inspect_day():
+    print("Inspecting activities for 2026-01-30...")
+    
+    # Filter for the specific day and roughly the MR if possible, or just search all
+    response = supabase.table("activities").select("*").eq("date", "2026-01-30").execute()
+    data = response.data
+    
+    if not data:
+        print("No data for 2026-01-30")
+        return
+
+    df = pd.DataFrame(data)
+    print(f"Total rows for 2026-01-30: {len(df)}")
+    
+    print("\nSample of data (MR_ID, Customer_ID, Local Time):")
+    print(df[['mr_id', 'customer_id', 'start_time']].head(20))
+    
+    # Check counts per MR
+    print("\nCounts per MR:")
+    print(df['mr_id'].value_counts())
+
+if __name__ == "__main__":
+    inspect_day()
