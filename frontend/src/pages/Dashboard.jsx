@@ -436,6 +436,16 @@ function TaskCard({ task, status, onUpdate, onClick, isEditable = true }) {
         <div className="flex items-center gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-300">
           <MapPin size={14} /> {task.locality}
         </div>
+        {(task.travel_duration_min || task.distance_km) && (
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-1">
+            <span>🚗</span>
+            <span>
+              {task.distance_km ? `${task.distance_km} km` : ''}
+              {task.distance_km && task.travel_duration_min ? ' • ' : ''}
+              {task.travel_duration_min ? `${task.travel_duration_min} min` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {isEditable && (

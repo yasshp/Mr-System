@@ -26,8 +26,8 @@ export default function KanbanCard({ task, column }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-lg border cursor-grab active:cursor-grabbing shadow-sm ${column === 'completed'
-          ? 'bg-gray-50 dark:bg-gray-700/50 line-through opacity-80'
-          : 'bg-white dark:bg-gray-800 border-l-4 border-l-indigo-500'
+        ? 'bg-gray-50 dark:bg-gray-700/50 line-through opacity-80'
+        : 'bg-white dark:bg-gray-800 border-l-4 border-l-indigo-500'
         }`}
     >
       <div className="flex justify-between items-start mb-2">
@@ -70,9 +70,12 @@ export default function KanbanCard({ task, column }) {
         </div>
       )}
 
-      {column === 'pending' && task.distance_km && (
-        <div className="mt-3 text-xs text-gray-700 dark:text-gray-300 font-medium">
-          ≈ {task.distance_km} km • {task.travel_duration_min} min travel
+      {(task.distance_km || task.travel_duration_min) && (
+        <div className="mt-3 text-xs text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+          <span>🚗</span>
+          {task.distance_km ? `≈ ${task.distance_km} km` : ''}
+          {task.distance_km && task.travel_duration_min ? ' • ' : ''}
+          {task.travel_duration_min ? `${task.travel_duration_min} min travel` : ''}
         </div>
       )}
     </motion.div>

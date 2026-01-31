@@ -59,6 +59,24 @@ def get_daily_schedule(mr_id: str, date: str):
         
         # Combine Data (Activities take precedence if duplicates exist)
         # We convert to DF immediately to handle deduplication easily
+        
+        # --- ENRICHMENT STEP ---
+        # Activities table lacks 'travel_duration_min', 'distance_km', 'suggested_talking_points'
+        # We fetch these from master_schedule if available.
+        if data_activities and data_master:
+            master_map = {row['activity_id']: row for row in data_master}
+            enrich_keys = ['travel_duration_min', 'distance_km', 'suggested_talking_points']
+            
+            for row in data_activities:
+                if 'activity_id' in row and row['activity_id'] in master_map:
+                    m_row = master_map[row['activity_id']]
+                    for key in enrich_keys:
+                        # Only fill if missing or empty in activity row
+                        if key not in row or row[key] is None or row[key] == "":
+                             if key in m_row:
+                                 row[key] = m_row[key]
+        # -----------------------
+
         df_master = pd.DataFrame(data_master)
         df_activities = pd.DataFrame(data_activities)
         
