@@ -51,3 +51,49 @@ mr-project/
     │   ├── services/     # Business logic & DB interactions
     ├── scripts/          # Utility scripts (data seeding, maintenance)
     └── supabase_schema.sql  # Database schema definition
+
+⚡ Getting Started
+Prerequisites
+Node.js (v18+)
+Python (v3.9+)
+Supabase Account and Project
+Backend Setup
+
+Navigate to the backend directory
+cd backend
+
+Create and activate a virtual environment:
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
+Install dependencies
+pip install -r requirements.txt
+
+Create a .env file in the backend directory with your credentials
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+
+Frontend Setup
+Navigate to the frontend directory
+cd frontend
+
+Install dependencies
+npm install
+
+Run the development server:
+npm run dev
+
+Open http://localhost:5173 in your browser.
+
+ Database Schema
+The application uses the following core tables in Supabase:
+
+users: Stores MR and Admin profiles.
+master_schedule: The central table for daily planning (tasks, visits, status).
+activities: Archives completed activities and visit logs.
+contacts: Database of doctors/clients with geolocation data.
+
+
