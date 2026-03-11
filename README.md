@@ -1,120 +1,177 @@
+
 # MR Portal 🏥
 
-> A full-stack Medical Representative scheduling and management system utilizing hybrid AI algorithms and real-time routing to optimize daily visit plans.
+> A complete full-stack platform designed for Medical Representative scheduling and management, leveraging hybrid AI algorithms and real-time routing to create optimized daily visit plans.
 
-## 📖 Project Overview
+---
 
-### The Problem
+# 📖 Project Overview
 
-Managing and prioritizing daily schedules for medical representatives (MRs) across vast geographical territories is incredibly complex. Manual planning often leads to sub-optimal routing, neglected high-value contacts, and inefficient use of time, ultimately hurting sales and engagement.
+## The Problem
 
-### Why It Was Built
+Planning and managing daily schedules for medical representatives across large geographic territories is highly challenging. When schedules are created manually, it often results in inefficient routing, missed high-priority contacts, and poor time utilization. These inefficiencies negatively impact engagement levels and sales performance.
 
-MR Portal was built to automate and optimize this complex scheduling process. By blending rule-based business logic with machine learning (XGBoost) and real-time road distance APIs (OSRM), the platform provides a deterministic, data-driven approach to medical sales management.
+## Why It Was Built
 
-### Real-World Use Case
+MR Portal was developed to automate and streamline this scheduling challenge. The system combines structured business rules with machine learning (XGBoost) and real-world road distance calculations using the OSRM API. This hybrid approach allows organizations to generate deterministic, data-driven schedules that improve operational efficiency.
 
-A pharmaceutical or medical device company assigns zones to its Medical Representatives. Using MR Portal, an admin can generate a full month's schedule for all MRs with a single click. The system automatically prioritizes the most valuable doctors, groups visits geographically, considers real-world traffic and road distances, and optimizes the MR's workday within standard business hours.
+## Real-World Use Case
 
-## ✨ Key Features
+In pharmaceutical or medical device companies, territories are typically assigned to individual Medical Representatives. With MR Portal, administrators can automatically generate an entire month’s visit schedule for all representatives in a single action.
 
-- **Hybrid AI Scheduling Algorithm:** Combines rule-based business scoring with an XGBoost machine learning model to prioritize contacts based on engagement status, past visits, and spatial patterns.
-- **Smart Route Optimization:** Integrates with the Open Source Routing Machine (OSRM) to calculate realistic road-distance and drive time.
-- **Interactive Map Dashboard:** Real-time visual tracking of planned, completed, and cancelled visits using a React-Leaflet map interface.
-- **Comprehensive Reporting Engine:** Generates detailed compliance, travel, and customer behavior reports with one-click CSV export capabilities.
-- **Role-Based Access Control:** Distinct workflows featuring tailored dashboards for MRs (execution) and Admins (schedule generation, analytics, and data inspection).
+The system intelligently prioritizes high-value doctors, clusters visits geographically, incorporates real-world road distances and travel times, and ensures that each MR's schedule fits within standard working hours.
 
-## 🏗️ System Architecture
+---
 
-The overarching system architecture dictates a modern, decoupled client-server model:
+# ✨ Key Features
 
-- **Frontend (Client):** A dynamic React SPA built with Vite and Tailwind CSS. It communicates securely with the backend via REST APIs and renders interactive map views using Leaflet.
-- **Backend (API Layer):** A high-performance FastAPI server running on Uvicorn. It handles multi-router endpoints, JWT authentication, and hosts the complex scheduling AI logic.
-- **Database (Data Layer):** Supabase (PostgreSQL) acts as the primary data store. Strict Row-Level Security policies ensure safe and scalable data isolation across central tables (`users`, `contacts`, `activities`, and `master_schedule`).
-- **External Dependencies:** XGBoost handles predictive ML scoring and OSRM API provides spatial routing logic.
+* **Hybrid AI Scheduling Algorithm:** Combines business-rule scoring with an XGBoost machine learning model to prioritize contacts based on engagement status, previous visits, and geographic patterns.
+* **Intelligent Route Optimization:** Uses the Open Source Routing Machine (OSRM) API to calculate realistic road distances and driving times between locations.
+* **Interactive Map Dashboard:** Displays planned, completed, and cancelled visits in real-time through a React-Leaflet interactive map interface.
+* **Advanced Reporting System:** Produces detailed reports on compliance, travel activity, and customer engagement, with simple one-click CSV export functionality.
+* **Role-Based Access Control:** Provides separate workflows and dashboards tailored for Medical Representatives (task execution) and Admin users (schedule generation, analytics, and data monitoring).
 
-## 💻 Technical Stack
+---
 
-**Programming Languages:** Python, JavaScript, SQL
+# 🏗️ System Architecture
 
-**Frontend:**
+The platform follows a modern **decoupled client-server architecture**.
 
-- React 19 / Vite
-- Tailwind CSS (Styling)
-- React Router (Navigation)
-- React-Leaflet & Leaflet (Maps)
-- dnd-kit (Drag-and-Drop Kanban)
+### Frontend (Client Layer)
 
-**Backend:**
+The frontend is implemented as a dynamic React Single Page Application built with Vite and styled using Tailwind CSS. It communicates with backend services through secure REST APIs and visualizes route information through Leaflet-based interactive maps.
 
-- Python 3.9+
-- FastAPI & Uvicorn (REST API generation)
-- Supabase (PostgreSQL Database)
-- Pandas (Data processing & matrices)
-- PyJWT (Authentication)
+### Backend (API Layer)
 
-**Machine Learning & Infrastructure:**
+The backend is powered by a FastAPI server running on Uvicorn. It manages multiple API routers, JWT-based authentication, and hosts the core AI-powered scheduling logic responsible for generating optimized visit plans.
 
-- XGBoost & Scikit-learn (Machine Learning scoring)
-- OSRM API (Road-distance Routing)
+### Database (Data Layer)
 
-## 🧠 AI / ML Details
+Supabase (PostgreSQL) serves as the main database system. Strict Row-Level Security policies are applied to ensure safe data access and scalable isolation across central tables such as `users`, `contacts`, `activities`, and `master_schedule`.
 
-The intelligence of the platform is driven by a highly orchestrated **9-step scheduling pipeline** that relies on a hybrid scoring system:
+### External Dependencies
 
-- **Models Used:** XGBoost regression model trained dynamically.
-- **Feature Engineering:** Features include LabelEncoded business segments, engagement statuses, historical referrals, lifetime visit counts, 90-day visit frequency, and geographic clustering vectors (Latitude/Longitude).
-- **Training Pipeline:** A deterministic rule-based score (awarding points for neglected contacts, strategic referral segments, etc.) is quantified first. The XGBoost model is then trained on-the-fly utilizing these rules as labels, allowing it to seamlessly learn non-linear interactions and spatial proximity phenomena that flat rules might ignore.
-- **Evaluation & Optimization:** The final priority score is a **50/50 fusion** of the rule-based score and the XGBoost prediction. Top-tier targets are sequenced using OSRM to validate that physical travel times strictly align with standard 10:00 AM to 7:00 PM operational hours.
+* **XGBoost** is used for predictive machine learning scoring.
+* **OSRM API** is used for road-distance calculations and routing logic.
 
-## 📂 Project Structure
+---
 
-```text
+# 💻 Technical Stack
+
+## Programming Languages
+
+Python, JavaScript, SQL
+
+## Frontend
+
+* React 19 / Vite
+* Tailwind CSS (UI styling)
+* React Router (Client-side navigation)
+* React-Leaflet & Leaflet (Map visualization)
+* dnd-kit (Drag-and-drop Kanban functionality)
+
+## Backend
+
+* Python 3.9+
+* FastAPI & Uvicorn (REST API development)
+* Supabase (PostgreSQL database)
+* Pandas (data manipulation and matrix processing)
+* PyJWT (authentication handling)
+
+## Machine Learning & Infrastructure
+
+* XGBoost & Scikit-learn (Machine learning scoring models)
+* OSRM API (road distance and routing engine)
+
+---
+
+# 🧠 AI / ML Details
+
+The platform’s intelligence is driven by a carefully designed **9-step scheduling pipeline** that uses a hybrid scoring mechanism.
+
+### Models Used
+
+The system employs an **XGBoost regression model** that is trained dynamically during the scheduling process.
+
+### Feature Engineering
+
+Several engineered features are used for prioritization, including:
+
+* LabelEncoded business segments
+* Engagement status indicators
+* Historical referral metrics
+* Lifetime visit counts
+* Visit frequency over the previous 90 days
+* Geographic clustering features using latitude and longitude
+
+### Training Pipeline
+
+The process begins with a deterministic rule-based scoring system that assigns points based on business priorities, such as neglected contacts or strategic referral segments.
+
+These rule-based scores are then used as training labels for the XGBoost model. This enables the model to capture complex non-linear relationships and geographic proximity patterns that may not be detected through static rules alone.
+
+### Evaluation & Optimization
+
+The final prioritization score is calculated through a **50/50 combination** of the rule-based score and the prediction generated by the XGBoost model.
+
+The highest priority contacts are then ordered using OSRM routing to ensure travel times are realistic and the schedule strictly adheres to operational working hours between **10:00 AM and 7:00 PM**.
+
+---
+
+# 📂 Project Structure
+
+```
 mr-project/
 ├── backend/
 │   ├── app/
-│   │   ├── routers/        # API Endpoints (auth, schedule, reports, admin)
-│   │   ├── services/       # Core ML scheduling logic, routing, DB services
+│   │   ├── routers/        # API endpoints (authentication, scheduling, reports, admin)
+│   │   ├── services/       # Core ML scheduling logic, routing modules, and database services
 │   │   └── main.py         # FastAPI application entry point
-│   ├── scripts/            # Data seeders, ML simulators, migration tools
-│   ├── requirements.txt    # Python dependencies
-│   └── supabase_schema.sql # Database DDL
+│   ├── scripts/            # Data seed scripts, ML simulators, migration utilities
+│   ├── requirements.txt    # Python dependency list
+│   └── supabase_schema.sql # Database schema definition
 ├── frontend/
 │   ├── src/
-│   │   ├── components/     # UI Components (Map, Kanban, Sidebar)
-│   │   ├── pages/          # Views (Dashboard, Reports, Admin)
-│   │   └── lib/            # API network integration
+│   │   ├── components/     # UI components (Map, Kanban board, Sidebar)
+│   │   ├── pages/          # Application views (Dashboard, Reports, Admin)
+│   │   └── lib/            # API integration utilities
 │   ├── package.json        # Node dependencies
-│   └── tailwind.config.js  # UI Framework configuration
+│   └── tailwind.config.js  # Tailwind configuration
 └── README.md
 ```
 
-## 🚀 Installation Guide
+---
 
-### Prerequisites
+# 🚀 Installation Guide
 
-- Node.js (v18+)
-- Python (v3.9+)
-- Supabase Account
+## Prerequisites
 
-### 1. Database Setup
+* Node.js (v18 or higher)
+* Python (v3.9 or higher)
+* Supabase account
 
-Run the SQL script provided in `backend/supabase_schema.sql` within your Supabase SQL Editor to provision the tables and necessary Row-Level Security policies.
+---
 
-### 2. Backend Setup
+## 1. Database Setup
+
+Execute the SQL script located at `backend/supabase_schema.sql` within the Supabase SQL Editor. This will create the required tables and configure the necessary Row-Level Security policies.
+
+---
+
+## 2. Backend Setup
 
 ```bash
-# Navigate to backend directory
+# Move into the backend directory
 cd backend
 
-# Create and activate virtual environment
+# Create and activate a virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+source venv/bin/activate  # Windows: .\venv\Scripts\activate
 
-# Install dependencies
+# Install required dependencies
 pip install -r requirements.txt
 
-# Setup Environment Variables
+# Configure environment variables
 echo SUPABASE_URL=your_supabase_url > .env
 echo SUPABASE_KEY=your_supabase_anon_key >> .env
 
@@ -122,53 +179,76 @@ echo SUPABASE_KEY=your_supabase_anon_key >> .env
 uvicorn app.main:app --reload
 ```
 
-The backend will be automatically available at `http://localhost:8000`.
+The backend service will run at:
 
-### 3. Frontend Setup
+```
+http://localhost:8000
+```
+
+---
+
+## 3. Frontend Setup
 
 ```bash
-# Navigate to frontend directory
+# Navigate to the frontend directory
 cd frontend
 
-# Install NPM dependencies
+# Install Node dependencies
 npm install
 
 # Start the Vite development server
 npm run dev
 ```
 
-The frontend will initialize and be available at `http://localhost:5173`.
+The frontend application will be accessible at:
 
-## 💡 Usage
+```
+http://localhost:5173
+```
 
-### Generating Schedules (Admin Workflow)
+---
 
-1. Log in via the interface using Admin credentials (`Username: ADMIN`, `Password: ADMIN`).
-2. Navigate to the **Admin Console** tab.
-3. Click on **Generate Schedule**. The FastAPI backend will immediately analyze all zone contacts, score them via XGBoost arrays, route transit coordinates via OSRM, and populate exactly targeted daily itineraries for the upcoming 30 days.
-4. Review generated outputs in the `Master_Schedule` Dataset Inspector table.
+# 💡 Usage
+
+## Generating Schedules (Admin Workflow)
+
+1. Log in to the platform using the admin credentials
+   **Username:** ADMIN
+   **Password:** ADMIN
+2. Open the **Admin Console** section.
+3. Click **Generate Schedule**. The FastAPI backend will process all zone contacts, calculate priority scores using XGBoost, determine travel routes through OSRM, and generate optimized daily itineraries for the next 30 days.
+4. Review the generated schedule in the **Master_Schedule Dataset Inspector**.
 
 ![Schedule Generation Process](schedule%20generation.png)
 
-### Daily MR Workflow
+---
 
-1. Log in via your assigned MR credentials.
-2. View the centralized **Dashboard** to see the uniquely optimized route mapped dynamically on the Leaflet interface.
-3. Manage statuses effectively using the drag-and-drop Kanban board (Planned → Completed columns).
-4. Analyze personal historical adherence and travel metrics natively through the **Reports** tab.
+## Daily MR Workflow
 
-### Example API Request
+1. Log in using your assigned Medical Representative credentials.
+2. Access the **Dashboard** to view your optimized route displayed dynamically on the Leaflet map interface.
+3. Update task progress using the drag-and-drop Kanban board (Planned → Completed).
+4. Monitor your historical performance, travel statistics, and compliance metrics through the **Reports** section.
 
-Easily retrieve the granular schedule for a specific MR programmatically:
+---
+
+## Example API Request
+
+You can retrieve the detailed schedule for a specific MR programmatically using the following request:
 
 ```bash
 curl -X GET "http://localhost:8000/schedule/daily/MR_W1_1/2023-10-25" \
      -H "Authorization: Bearer <YOUR_JWT_TOKEN>"
 ```
 
-### Application Outputs (Placeholder)
+---
 
-*(Insert screenshots highlighting the Map Dashboard, Kanban Task Board, Reports View, and Admin Dataset Inspector here to provide visual context).*
+## Application Outputs (Placeholder)
+
+*(Insert screenshots demonstrating the Map Dashboard, Kanban Task Board, Reports Interface, and Admin Dataset Inspector to provide visual context for the application.)*
 
 ---
-*Architected for scale. Built for efficiency.*
+
+*Engineered for scalability. Designed for operational efficiency.*
+
+---
